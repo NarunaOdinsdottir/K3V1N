@@ -7,6 +7,8 @@ import time
 
 DATEINAME = "gedaechtnis.json"
 
+GEDAECHTNIS_DATEI = "k3v1n_memory.json"
+
 # Gedächtnis laden oder neu anlegen
 if os.path.exists(DATEINAME):
     with open(DATEINAME, "r") as f:
@@ -153,6 +155,17 @@ def mut_macher():
     print(random.choice(mutmachsätze))
     print("\n*** Weiter so, du Code-Heldin! ***")
 
+def lade_gedaechtnis():
+    if os.path.exists(GEDAECHTNIS_DATEI):
+        with open(GEDAECHTNIS_DATEI, "r") as f:
+            return json.load(f)
+    else:
+        return {}
+
+def speichere_gedaechtnis(gedaechtnis):
+    with open(GEDAECHTNIS_DATEI, "w") as f:
+        json.dump(gedaechtnis, f, indent=4)
+
 # Hauptmenü
 def menue(name):
     while True:
@@ -165,8 +178,9 @@ def menue(name):
         print("6: Chuck-Norris-Witz")
         print("7: Schurkenmodus")
         print("8: Mutmacher")
+        print("9: Gedächtnis")
 
-        wahl = input("Deine Wahl (1–8): ").strip()
+        wahl = input("Deine Wahl (1–9): ").strip()
         if wahl == "1":
             schere_stein_papier(name)
         elif wahl == "2":
@@ -184,8 +198,31 @@ def menue(name):
             schurken_modus(name)
         elif wahl == "8":
             mut_macher()
+        elif auswahl.lower() == "9":
+    gedaechtnis = lade_gedaechtnis()
+    print("""
+🧠 Was möchtest du tun?
+[1] Neue Notiz speichern
+[2] Notiz anzeigen
+""")
+    aktion = input("Wähle eine Option: ")
+    
+    if aktion == "1":
+        notiz = input("Was soll ich mir merken? ")
+        gedaechtnis["notiz"] = notiz
+        speichere_gedaechtnis(gedaechtnis)
+        print("🤖 K3V1N: Ich hab's mir gemerkt!")
+        
+    elif aktion == "2":
+        if "notiz" in gedaechtnis:
+            print(f"🤖 K3V1N erinnert sich: {gedaechtnis['notiz']}")
+        else:
+            print("🤖 K3V1N: Ich erinnere mich an nichts. 😶")
+    else:
+        print("🤖 K3V1N: Ungültige Auswahl.")
         else:
             print("Ungültige Eingabe du Honk!")
+
 
 # Spielstart
 def kevin_spiel():
