@@ -198,28 +198,28 @@ def menue(name):
             schurken_modus(name)
         elif wahl == "8":
             mut_macher()
-        elif auswahl.lower() == "9":
-    gedaechtnis = lade_gedaechtnis()
-    print("""
+        elif wahl == "9":
+            gedaechtnis = lade_gedaechtnis()
+            print("""
 🧠 Was möchtest du tun?
 [1] Neue Notiz speichern
 [2] Notiz anzeigen
 """)
-    aktion = input("Wähle eine Option: ")
-    
-    if aktion == "1":
-        notiz = input("Was soll ich mir merken? ")
-        gedaechtnis["notiz"] = notiz
-        speichere_gedaechtnis(gedaechtnis)
-        print("🤖 K3V1N: Ich hab's mir gemerkt!")
-        
-    elif aktion == "2":
-        if "notiz" in gedaechtnis:
-            print(f"🤖 K3V1N erinnert sich: {gedaechtnis['notiz']}")
-        else:
-            print("🤖 K3V1N: Ich erinnere mich an nichts. 😶")
-    else:
-        print("🤖 K3V1N: Ungültige Auswahl.")
+            aktion = input("Wähle eine Option: ")
+            
+            if aktion == "1":
+                notiz = input("Was soll ich mir merken? ")
+                gedaechtnis["notiz"] = notiz
+                speichere_gedaechtnis(gedaechtnis)
+                print("🤖 K3V1N: Ich hab's mir gemerkt!")
+                
+            elif aktion == "2":
+                if "notiz" in gedaechtnis:
+                    print(f"🤖 K3V1N erinnert sich: {gedaechtnis['notiz']}")
+                else:
+                    print("🤖 K3V1N: Ich erinnere mich an nichts. 😶")
+            else:
+                print("🤖 K3V1N: Ungültige Auswahl.")
         else:
             print("Ungültige Eingabe du Honk!")
 
