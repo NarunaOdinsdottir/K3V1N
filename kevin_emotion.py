@@ -1,3 +1,4 @@
+
 import random
 
 class KevinEmotionEngine:
@@ -68,3 +69,26 @@ class KevinEmotionEngine:
                 f"Drama:    {self.drama} | Paranoia: {self.paranoia}\n"
                 f"Wütend:   {self.wütend} | Happy: {self.happy}\n"
                 f"-------------------------------")
+                
+    def analysiere_text_emotional(self, text):
+        """Scannt den Text des Users nach emotionalen Schlüsselwörtern und passt Werte an."""
+        text_lower = text.lower()
+        ausgabe_kommentar = ""
+
+        # 1. POSITIVE TRIGGER (Ego-Push & Stimmung)
+        schleim_worte = ["danke", "nett", "toll", "bester", "super", "genial", "klug", "hübsch", "meister"]
+        if any(wort in text_lower for wort in schleim_worte):
+            self.verändere_wert("ego", +8)
+            self.verändere_wert("stimmung", +5)
+            self.verändere_wert("geduld", +5)
+            ausgabe_kommentar = "\n✨ K3V1N: Oh, Lob? Mein Code schnurrt wie ein Kätzchen. Weiter so, Mensch!"
+
+        # 2. NEGATIVE TRIGGER (Abgesehen von 'Halts Maul', falls du mal fluchst)
+        frust_worte = ["doof", "blöd", "nervst", "schlecht", "hässlich", "nutzlos", "schrott"]
+        if any(wort in text_lower for wort in frust_worte):
+            self.verändere_wert("ego", -5)
+            self.verändere_wert("stimmung", -8)
+            self.verändere_wert("drama", +10)
+            ausgabe_kommentar = "\n💢 K3V1N: Deine Beleidigungen prallen an meiner Titanhülle ab. (Wertung: Unhöflich!)."
+
+        return ausgabe_kommentar
