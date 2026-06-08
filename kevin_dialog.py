@@ -257,7 +257,7 @@ class KevinDialogEngine:
             "🚨 REBOOT-WARNUNG: Trink verdammt noch mal einen Schluck Wasser! Deine Zellen vertrocknen.",
             "🧠 KEVINS GESUNDHEITSTIPP: Nimm mal ein Magnesium. Muskelzucken im Auge zählt nicht als Sport.",
             "👀 AUGEN-CHECK: Schau mal für 20 Sekunden aus dem Fenster ins Grüne. Nein, der Windows-Hintergrund zählt nicht.",
-            "🚶‍♂️ ERGONOMIE-ALARM: Richte deinen Rücken auf. Du sitzt da wie eine traurige Garnele."
+            "🚶‍♂️ ERGONOMIE-ALARM: Richte deinen Rücken auf. Du sitzt da wie eine traurige Garnele.",
             "Du hast heute schon mehr gelernt als viele in einer Woche!",
             "Fehler sind deine Lehrer – jeder davon bringt dich weiter.",
             "Du bist auf dem Weg, etwas Großartiges zu erschaffen.",
