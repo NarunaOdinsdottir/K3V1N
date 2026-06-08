@@ -17,7 +17,7 @@ class KevinCore:
         self.emotions = KevinEmotionEngine()
         self.dialogs = KevinDialogEngine()
         self.diary = KevinDiaryEngine(self)
-        self.events = KevinEventEngine(self, self.emotions, self.dialogs) # Nur noch einmal, korrekt geordnet
+        self.events = KevinEventEngine(self, self.emotions, self.dialogs) 
         
         # Gedächtnis-Konfiguration
         self.dateiname_gedaechtnis = "gedaechtnis.json"
