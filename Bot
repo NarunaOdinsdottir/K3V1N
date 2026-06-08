@@ -1,0 +1,115 @@
+import telebot
+from telebot import types
+import random
+import time
+
+# Kevin Module importieren (Exakt wie in kevin_core_2.py)
+from kevin_core_2 import KevinCore
+
+# 🔴 SETZE HIER DEINEN TELEGRAM-TOKEN EIN!
+TOKEN = "DEIN_TELEGRAM_BOT_TOKEN_HIER"
+bot = telebot.TeleBot(TOKEN)
+
+# Kevin Core initialisieren
+kevin = KevinCore()
+
+# Temporärer Speicher, um zu wissen, ob der User gerade ein Logbuch-Thema eintippt
+user_states = {}
+
+def generiere_tastatur():
+    """Erstellt ein schickes Menü direkt im Telegram-Chat."""
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    btn_story = types.KeyboardButton("🛸 Erzähl mir was")
+    btn_joke = types.KeyboardButton("🤠 Dad-Joke")
+    btn_status = types.KeyboardButton("🧠 Emotionen prüfen")
+    btn_log_view = types.KeyboardButton("📜 Logbuch ansehen")
+    btn_log_new = types.KeyboardButton("📝 Neuer Log-Eintrag")
+    
+    markup.add(btn_story, btn_joke, btn_status, btn_log_view, btn_log_new)
+    return markup
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    kevin.user_name = message.from_user.first_name
+    modus = kevin.emotions.bestimme_modus()
+    begruessung = kevin.dialogs.hole_begruessung(modus)
+    
+    text = f"🤖 K3V1N [Modus: {modus}] ist online!\n\n👋 {begruessung}"
+    bot.reply_to(message, text, reply_markup=generiere_tastatur())
+
+@bot.message_handler(func=lambda message: True)
+def handle_all_messages(message):
+    chat_id = message.chat.id
+    text = message.text.strip()
+    text_lower = text.lower()
+
+    # 1. PRÜFUNG: Befindet sich der User im Logbuch-Erstellungs-Prozess?
+    if chat_id in user_states:
+        state = user_states[chat_id]
+        if state["step"] == "waiting_for_title":
+            user_states[chat_id] = {"step": "waiting_for_details", "title": text}
+            bot.send_message(chat_id, "K3V1N: Und worum geht es da genau? Schieß los (Details eingeben):")
+            return
+        elif state["step"] == "waiting_for_details":
+            title = state["title"]
+            # Eintrag in Kevins echtes Gedächtnis schreiben
+            if "logbuch" not in kevin.gedaechtnis:
+                kevin.gedaechtnis["logbuch"] = {}
+            
+            kevin.gedaechtnis["logbuch"][title] = {
+                "notiz": text,
+                "datum_erstellt": time.strftime("%d.%m.%Y"),
+                "status": "offen"
+            }
+            kevin.speichere_gedaechtnis()
+            del user_states[chat_id] # State löschen, Prozess beendet
+            bot.send_message(chat_id, f"✨ K3V1N: Alles klar, '{title}' ist in meinen Sektoren gespeichert! Ich werde dich beizeiten daran erinnern.", reply_markup=generiere_tastatur())
+            return
+
+    # 2. EMOTIONALE TEXTANALYSE (Scant jedes Wort auf Lob/Beleidigungen!)
+    kommentar = kevin.emotions.analysiere_text_emotional(text)
+    if kommentar:
+        bot.send_message(chat_id, kommentar)
+
+    # 3. VERARBEITUNG DER TASTEN-BEFEHLE
+    if "halts maul" in text_lower:
+        reaktion = kevin.events.trigger_event("halts_maul", kevin)
+        bot.reply_to(message, reaktion)
+        
+    elif text == "🛸 Erzähl mir was":
+        # Holt eine deiner großartigen neuen Storys (Fix aus Schritt 1 integriert!)
+        story = kevin.dialogs.hole_kevin_story()
+        bot.send_message(chat_id, f"🛸 K3V1N von früher:\n\n{story}")
+        
+    elif text == "🤠 Dad-Joke":
+        joke = kevin.dialogs.hole_witz("dad")
+        kevin.emotions.verändere_wert("stimmung", +5)
+        bot.send_message(chat_id, joke)
+        
+    elif text == "🧠 Emotionen prüfen":
+        bericht = kevin.emotions.generiere_statusbericht()
+        bot.send_message(chat_id, f"```\n{bericht}\n
+```", parse_mode="Markdown")
+        
+    elif text == "📜 Logbuch ansehen":
+        if "logbuch" not in kevin.gedaechtnis or not kevin.gedaechtnis["logbuch"]:
+            bot.send_message(chat_id, "📝 Das Logbuch ist noch komplett leer.")
+            return
+        
+        ausgabe = "📜 === DEINE LOGBUCH-EINTRÄGE ===\n"
+        for thema, daten in kevin.gedaechtnis["logbuch"].items():
+            status_icon = "🟢 [OFFEN]" if daten["status"] == "offen" else "⚫ [ERLEDIGT]"
+            ausgabe += f"\n{status_icon} *{thema}* ({daten['datum_erstellt']})\n  Details: {daten['notiz']}\n"
+        bot.send_message(chat_id, ausgabe, parse_mode="Markdown")
+
+    elif text == "📝 Neuer Log-Eintrag":
+        user_states[chat_id] = {"step": "waiting_for_title"}
+        bot.send_message(chat_id, "📝 === K3V1NS INTERAKTIVES LOGBUCH ===\n\nWorüber möchtest du Tagebuch führen? (z.B. Python-Projekt, Klausur, Chef):", markup=types.ReplyKeyboardRemove())
+
+    else:
+        # Generische Antwort, wenn es kein Menü-Knopf war und kein Schlüsselwort angeschlagen hat
+        bot.reply_to(message, "K3V1N: Ich hab dich gehört. Aber mein verchromtes Ego ignoriert das jetzt einfach mal. Nutz die Knöpfe!")
+
+# Bot-Schleife starten
+print("🤖 Kevin ist bereit und lauscht auf Telegram...")
+bot.infinity_polling()
