@@ -5,7 +5,7 @@ import os
 import datetime
 import random
 import Bullshitbingo
-# Unsere frisch gebackenen Module importieren
+
 from kevin_emotion import KevinEmotionEngine
 from kevin_dialog import KevinDialogEngine
 from kevin_events import KevinEventEngine
@@ -59,9 +59,49 @@ class KevinCore:
             # Übergibt sich selbst (Core) an das Event
             print(self.events.trigger_event("user_ignoriert", self))
             thread.join()
+            return ""
             
-        return result[0] if result[0] is not None else ""
+        eingabe = result[0] if result[0] is not None else ""
+        # --- NEU: EMOTIONALE TEXTANALYSE ---
+        # Wenn der User etwas eingegeben hat, jagen wir es durch die Emotions-Engine
+        if eingabe.strip():
+            kommentar = self.emotions.analysiere_text_emotional(eingabe)
+            if kommentar:
+                print(kommentar) # Kevin gibt direkt Feedback auf dein Lob/Fluchen!
+                
+        return eingabe
+        
+    def kevin_startet_gespraech(self):
+        """Kevin fängt proaktiv an zu labern und reagiert empfindlich auf 'Halts Maul'."""
+        # Wir filtern alle persönlichen Infos aus dem Gedächtnis, die KEIN Inventar/Logbuch sind
+        bekannte_infos = {k: v for k, v in self.gedaechtnis.items() 
+                          if k not in ["inventar", "logbuch", "Geheime Mission"] and v not in ["Blau", "Byte-Kekse", ""]}
+        
+        # KVN-Entscheidung: Redet er über den User oder über sich selbst?
+        if bekannte_infos and random.random() < 0.5:
+            # Über den User reden!
+            schluessel = random.choice(list(bekannte_infos.keys()))
+            wert = bekannte_infos[schluessel]
+            text = self.dialogs.baue_user_talk(schluessel, wert)
+        else:
+            # Über Kevins absurde Hobbys reden!
+            text = self.dialogs.hole_kevin_story()
 
+        print(f"\n🛸 K3V1N: {text}")
+        # Hier nutzen wir jetzt input_mit_timeout, damit der Timer läuft UND die Emotions-Engine scannt!
+        reaktion = self.input_mit_timeout("(Drücke ENTER zum Ignorieren oder sag ihm deine Meinung): ").strip()
+        
+        if "halts maul" in reaktion.lower():
+            print(self.events.trigger_event("halts_maul", self))
+            self.dialogs.zeige_emotions_bild(self.emotions.bestimme_modus())
+        elif reaktion:
+            # Wenn kein Schlüsselwort angeschlagen hat (kommentar war leer), kommt sein Standard-Spruch
+            # Wir prüfen das, indem wir schauen, ob sich das Ego gerade nicht durch ein Schlüsselwort verändert hat
+            schleim_worte = ["danke", "nett", "toll", "bester", "super", "genial", "klug", "hübsch", "meister", "doof", "blöd", "nervst"]
+            if not any(wort in reaktion.lower() for wort in schleim_worte):
+                print(f"\nK3V1N: Deine Worte prallen an meinem verchromten Ego ab! Aber danke für den Input.")
+                self.emotions.verändere_wert("ego", +5)
+            
     def starte_session(self):
         print("🔧 K3V1N Initialisierung startet...")
         time.sleep(0.5)
@@ -96,6 +136,10 @@ class KevinCore:
                     self.dialogs.zeige_emotions_bild(self.emotions.bestimme_modus())
                 elif aktion == "nachhaken": 
                     self.diary.zufälliges_nachhaken()
+                elif aktion == "ausfragen":
+                    self.kevin_stellt_frage()
+                elif aktion == "unterhaltung":
+                    self.kevin_startet_gespraech()
 
             print(f"\n--- K3V1N MENÜ (Aktueller Modus: {self.emotions.bestimme_modus()}) ---")
             print("1: Lass uns spielen")
