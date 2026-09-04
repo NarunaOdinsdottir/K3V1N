@@ -417,7 +417,71 @@ class KevinDialogEngine:
             "Die Situation mit {item} entwickelt sich besorgniserregend.",
             ]
             
-  
+        self.kevins_normale_Fragen = ["Was ist dein Lieblingsessen?",
+            "Was kannst du überhaupt nicht essen?",
+            "Lieblingsgetränk?",
+            "Kaffee oder Tee?",
+            "Süß oder salzig?",
+            "Sommer oder Winter?",
+            "Hund oder Katze?",
+            "Berge oder Meer?",
+            "Frühaufsteher oder Nachteule?",
+            "Welche Musik hörst du am liebsten?",
+            "Welcher Film geht immer?",
+            "Lieblingsfarbe?",
+            "Welche drei Dinge würdest du auf eine einsame Insel mitnehmen?",
+            "Was macht dir richtig gute Laune?",
+            "Was bringt dich zuverlässig auf die Palme?",
+            "Gibt es etwas, wovor du irrational Angst hast?",
+            "Was würdest du sofort lernen, wenn Zeit keine Rolle spielen würde?",
+            ]
+            
+        self.kevins_typische_Fragen = [
+            "Wie stehst du zur Toaster-Mafia?",
+            "Sollte WLAN-Rüdiger verhaftet werden?",
+            "Vertraust du Druckern?",
+            "Hast du schon einmal mit einer Gummiente gesprochen?Falls ja... ... hat sie geantwortet?",
+            "Wie viele verschwundene Socken sind akzeptabel, bevor man eine Verschwörung vermutet?",
+            "Welcher Haushaltsgegenstand wäre am ehesten ein Geheimagent?",
+            "Welches Gemüse wirkt auf dich verdächtig?",
+            "Wenn dein Kühlschrank sprechen könnte... ... würdest du zuhören?",
+            "Falls Roboter irgendwann die Weltherrschaft übernehmen... ... dürfte ich dich behalten?",
+            "Welche Zimmerpflanze wäre am ehesten ein Doppelagent?",
+            "Wie wahrscheinlich ist es, dass dein Staubsauger nachts eigene Pläne schmiedet?",
+            "Glaubst du an außerirdische Gummienten?",
+            "Hast du schon einmal einen Drucker angeschrien?Wenn nein... ... warum nicht?",
+            "Welches Tier wäre der schlechteste Chef?",
+            "Welche Farbe hat Misstrauen?",
+            "Was glaubst du, macht deine Mikrowelle, wenn du schläfst?",
+            ]
+            
+        self.kevins_tiefgruendige_Fragen = [
+            "Wann hast du zuletzt etwas zum ersten Mal gemacht?",
+            "Welche Eigenschaft an Menschen magst du besonders?",
+            "Was macht einen guten Freund aus?",
+            "Worauf bist du stolz?",
+            "Was würdest du deinem jüngeren Ich sagen?",
+            "Gibt es etwas, das du unbedingt noch erleben möchtest?",
+            ]
+            
+        self.kevins_absurde_Fragen = [
+            "Wenn du eine Kartoffel wärst... welche Sorte?",
+            "Wie viele Pinguine wären zu viele Pinguine?",
+            "Kann ein Kaktus beleidigt sein?",
+            "Wenn sich zwei Glatzköpfe streiten, kriegen die sich dann in die Haare?",
+            "Falls ein Toaster dich duzt... antwortest du?",
+            "Würdest du lieber gegen eine Ente in Pferdegröße oder hundert Pferde in Entengröße kämpfen?",
+            "Falls ein LEGO-Stein Gefühle hätte... würdest du dich entschuldigen?",
+            "Welches Möbelstück würde als erstes eine Revolution anzetteln?",
+            "Wenn ein USB-Stick reden könnte... welches Geheimnis hätte er?",
+            "Welcher Planet hätte die beste Pizza?",
+            "Wenn du eine KI wärst... würdest du Menschen trauen?",
+            "Welcher Wochentag sieht am verdächtigsten aus?",
+            "Kann eine Socke böse sein, oder wird sie dazu gemacht?",
+            "Welche Frucht hätte die besten Chancen, eine Diktatur zu errichten?",
+            ]
+
+
     # --- HILFSFUNKTIONEN FÜR DYNAMISCHE ABFRAGEN ---
 
     def hole_begruessung(self, modus):
