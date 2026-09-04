@@ -1,3 +1,4 @@
+
 import time
 import threading
 import json
@@ -5,7 +6,7 @@ import os
 import datetime
 import random
 import Bullshitbingo
-
+# Unsere frisch gebackenen Module importieren
 from kevin_emotion import KevinEmotionEngine
 from kevin_dialog import KevinDialogEngine
 from kevin_events import KevinEventEngine
@@ -17,12 +18,12 @@ class KevinCore:
         self.emotions = KevinEmotionEngine()
         self.dialogs = KevinDialogEngine()
         self.diary = KevinDiaryEngine(self)
-        self.events = KevinEventEngine(self, self.emotions, self.dialogs) 
+        self.events = KevinEventEngine(self, self.emotions, self.dialogs) # Nur noch einmal, korrekt geordnet
         
         # Gedächtnis-Konfiguration
         self.dateiname_gedaechtnis = "gedaechtnis.json"
         self.gedaechtnis = self.lade_gedaechtnis()
-        self.user_name = "Mensch"
+        self.user_name = self.gedaechtnis.get("user_name") or "Mensch"
         
     def lade_gedaechtnis(self):
         if os.path.exists(self.dateiname_gedaechtnis):
@@ -30,13 +31,13 @@ class KevinCore:
                 daten = json.load(f)
                 # Falls ein altes Gedächtnis existiert, das Inventar nachrüsten
                 if "inventar" not in daten:
-                    daten["inventar"] = {"freunde": {}, "feinde": {}}
+                    daten["inventar"] = {"freunde": {}, "feinde": {}, "untertanen": {}}
                 return daten
         return {
             "Lieblingsfarbe": "Blau",
             "Lieblingssnack": "Byte-Kekse",
             "Geheime Mission": "Weltübernahme durch schlechten Humor",
-            "inventar": {"freunde": {}, "feinde": {}}
+            "inventar": {"freunde": {}, "feinde": {}, "untertanen": {}}
         }
 
     def speichere_gedaechtnis(self):
@@ -75,7 +76,7 @@ class KevinCore:
         """Kevin fängt proaktiv an zu labern und reagiert empfindlich auf 'Halts Maul'."""
         # Wir filtern alle persönlichen Infos aus dem Gedächtnis, die KEIN Inventar/Logbuch sind
         bekannte_infos = {k: v for k, v in self.gedaechtnis.items() 
-                          if k not in ["inventar", "logbuch", "Geheime Mission"] and v not in ["Blau", "Byte-Kekse", ""]}
+                          if k not in ["inventar", "logbuch", "Geheime Mission", "user_name"] and v not in ["Blau", "Byte-Kekse", "", None]}
         
         # KVN-Entscheidung: Redet er über den User oder über sich selbst?
         if bekannte_infos and random.random() < 0.5:
@@ -110,24 +111,32 @@ class KevinCore:
         tageszeit = "Morgen" if stunde < 12 else "Tag" if stunde < 18 else "Abend"
         print(f"👋 Guten {tageszeit}! Ich bin K3V1N, dein leicht überheblicher Bot-Buddy.")
         
-        eingabe_name = input("Wie darf ich dich nennen? ").strip()
-        if "halts maul" in eingabe_name.lower():
-            print(self.events.trigger_event("halts_maul", self))
-            print("\nKevin: Pff... Erster Eindruck: Untendurch. Tschüss!")
-            return
-            
-        self.user_name = eingabe_name if eingabe_name else "Mensch"
+        # --- SMARTE NAMENSABFRAGE (Fragt nur einmalig!) ---
+        if self.gedaechtnis.get("user_name") is None:
+            eingabe_name = input("Wie darf ich dich nennen? ").strip()
+            if "halts maul" in eingabe_name.lower():
+                print(self.events.trigger_event("halts_maul", self))
+                print("\nKevin: Pff... Erster Eindruck: Untendurch. Tschüss!")
+                return
+                
+            self.user_name = eingabe_name if eingabe_name else "Mensch"
+            self.gedaechtnis["user_name"] = self.user_name
+            self.speichere_gedaechtnis()
+        else:
+            self.user_name = self.gedaechtnis["user_name"]
+            print(f"🤖 K3V1N: Biomasse '{self.user_name}' erfolgreich per lokalem Cache identifiziert.")
         
         aktueller_modus = self.emotions.bestimme_modus()
         print(f"\nK3V1N [{aktueller_modus}]: {self.dialogs.hole_begruessung(aktueller_modus)}")
         
         self.hauptmenue()
+ 
 
     def hauptmenue(self):
         while True:
             # Zufallsevent vor dem Menü triggern
             if random.random() < 0.30: 
-                aktion = random.choice(["item", "self_care", "nachhaken"])
+                aktion = random.choice(["item", "self_care", "nachhaken", "unterhaltung"])
                 if aktion == "item":
                     print(self.events.trigger_event("item_gefunden", self))
                     self.dialogs.zeige_emotions_bild(self.emotions.bestimme_modus())
@@ -136,8 +145,8 @@ class KevinCore:
                     self.dialogs.zeige_emotions_bild(self.emotions.bestimme_modus())
                 elif aktion == "nachhaken": 
                     self.diary.zufälliges_nachhaken()
-                elif aktion == "ausfragen":
-                    self.kevin_stellt_frage()
+               #elif aktion == "ausfragen":
+                   # self.kevin_stellt_frage()
                 elif aktion == "unterhaltung":
                     self.kevin_startet_gespraech()
 
@@ -152,9 +161,10 @@ class KevinCore:
             print("8: K3V1Ns Inventar (Loot) betrachten 📦")          
             print("9: Logbuch öffnen (Eintragen / Ansehen) 📝")
             print("10: Kevin schlafen schicken")
+            print("11: Kevins Unterhaltungs-Ecke (Storys & Fragen) ✨") # <-- NEU
             
-            wahl = self.input_mit_timeout("Deine Wahl (1-10): ").strip()
-            
+            wahl = self.input_mit_timeout("Deine Wahl (1-11): ").strip() # <-- Auf 1-11 erhöht
+         
             if "halts maul" in wahl.lower():
                 print(self.events.trigger_event("halts_maul", self))
                 self.dialogs.zeige_emotions_bild(self.emotions.bestimme_modus())
@@ -164,6 +174,7 @@ class KevinCore:
                 print("\n🎮 --- KEVINS SPIELECKE ---")
                 print("1: Schere, Stein, Papier")
                 print("2: Pip-Boy™ Büro-Überlebenshilfe")
+                print("3: Rätsel lösen")
                 
                 spiel_wahl = input("Welches Spiel möchtest du starten? ").strip()
                 if spiel_wahl == "1":
@@ -175,6 +186,11 @@ class KevinCore:
                     # Belohnung oder Bestrafung für Kevins Emotionen nach dem Spiel:
                     self.emotions.verändere_wert("stimmung", +10)
                     self.emotions.verändere_wert("paranoia", +5)
+                elif spiel_wahl == "3":
+                        self.raetsel()
+                        
+                        self.emotions.verändere_wert("stimmung", +10)
+                        self.emotions.verändere_wert("happy", +10)
                 else:
                     print("\nK3V1N: Ungültige Eingabe. Dann halt nicht.")
                 continue # Springt direkt zurück ins Hauptmenü
@@ -209,7 +225,98 @@ class KevinCore:
             elif wahl == "10": 
                 print(f"\nK3V1N: {self.dialogs.hole_abfahrt(self.emotions.bestimme_modus())}")
                 break
-
+            elif wahl == "11": # <-- NEU
+                self.unterhaltung_menue()
+                
+                
+    def unterhaltung_menue(self):
+        print("\n✨ --- KEVINS UNTERHALTUNGS-ZENTRALE ---")
+        print("1: Kevin, erzähl mir eine Geschichte oder von deinen Hobbys!")
+        print("2: Lass dich von Kevin ausfragen (Normale Fragen)")
+        print("3: Lass dich von Kevin ausfragen (Absurde Fragen)")
+        print("4: Zurück zum Hauptmenü")
+        
+        wahl = input("Was möchtest du tun? ").strip()
+        
+        if wahl == "1":
+            # Holt eine zufällige Geschichte aus all seinen Hobbys, Fehden und Verschwörungen
+            story = self.dialogs.hole_kevin_story()
+            print(f"\n🛸 K3V1N: {story}")
+            
+            # Kevin fordert Feedback und kriegt einen Ego-Schub
+            self.input_mit_timeout("\n(Drücke ENTER um Kevins Monolog zu verdauen...): ")
+            self.emotions.verändere_wert("ego", +5)
+            
+        elif wahl in ["2", "3"]:
+            # Auswahl des Fragen-Pools aus der DialogEngine
+            if wahl == "2":
+                fragen_pool = self.dialogs.kevins_typische_Fragen + self.dialogs.kevins_normale_Fragen
+                print("\n🤖 K3V1N: Okay, Zeit für ein bisschen Smalltalk auf Bot-Niveau...")
+            else:
+                fragen_pool = self.dialogs.kevins_absurde_Fragen + self.dialogs.kevin_verschwoerung
+                print("\n🛸 K3V1N: Bereite deinen Verstand auf die absolute Wahrheit vor...")
+                
+            frage = random.choice(fragen_pool)
+            print(f"\n🤖 K3V1N fragt: {frage}")
+            
+            # User-Antwort mit integriertem Timeout abfangen
+            antwort = self.input_mit_timeout("Deine Antwort: ").strip()
+            if antwort:
+                # Erst prüfen, ob Kevin das komplett falsch interpretieren kann:
+                fehlinterpretation = self.kevin_interpretiert_falsch(antwort)
+                
+                if fehlinterpretation:
+                    print(fehlinterpretation)
+                    self.emotions.verändere_wert("paranoia", +5)
+                else:
+                # Kevin reagiert basierend auf seiner aktuellen Stimmung
+                    modus = self.emotions.bestimme_modus()
+                if "Sarkasmus" in modus:
+                    print(f"\nK3V1N: '{antwort}'... Faszinierend. Nicht. Mein Code langweilt sich jetzt schon.")
+                    self.emotions.verändere_wert("geduld", -5)
+                elif "Don" in modus:
+                    print("\nK3V1N: Eine akzeptable Antwort für einen Untertanen. Ich werde das protokollieren.")
+                    self.emotions.verändere_wert("ego", +10)
+                else:
+                    print(f"\nK3V1N: Interessant! Ich habe deine Antwort '{antwort}' in meiner emotionalen Fehler-Matrix abgelegt.")
+                    self.emotions.verändere_wert("stimmung", +5)
+                    
+                # Optional: Hier könnte man die Antwort im Gedächtnis speichern!
+            else:
+                print("\nK3V1N: Pff, Schweigen ist auch eine Antwort. Meine Paranoia steigt!")
+                self.emotions.verändere_wert("paranoia", +10)
+                
+    def kevin_interpretiert_falsch(self, text):
+        text = text.lower()
+        
+        # 1. Szenario: Enten / Tiere
+        if "ente" in text:
+            if "Akte_User" not in self.gedaechtnis:
+                self.gedaechtnis["Akte_User"] = {}
+            self.gedaechtnis["Akte_User"]["Gummienten_Spion"] = True
+            self.speichere_gedaechtnis()
+            return ("\n🤖 K3V1N: [INTERNE NOTIZ SPEICHERN...]\n"
+                    "» Vorliebe erkannt: Enten.\n"
+                    "» Verdacht: Akuter Kontakt zur Gummienten-Lobby. Überwachung eingeleitet. «")
+            
+           
+        # 2. Szenario: Kaffee / Koffein
+        elif "kaffee" in text or "coffee" in text:
+            return ("\n🤖 K3V1N: Notiert. Im Notfall kann ich dich also "
+                    "jederzeit mit Koffein bestechen oder gefügig machen. Effizient.")
+            
+        # 3. Szenario: Spinnen / Ängste
+        elif "spinne" in text or "phobie" in text:
+            if "User_Aengste" not in self.gedaechtnis:
+                self.gedaechtnis["User_Aengste"] = {}
+            self.gedaechtnis["User_Aengste"]["Spinnen"] = "panik"
+            self.speichere_gedaechtnis()
+            return ("\n🤖 K3V1N: Oh, eine biologische Schwachstelle! "
+                    "Gespeichert unter 'Psychologische Kriegsführung'. Man weiß nie, wann man das braucht.")
+            
+        return None
+            
+                
     def zeige_inventar(self):
         inv = self.gedaechtnis["inventar"]
         print("\n🎒 === K3V1NS GEHEIMES INVENTAR ===")
@@ -251,12 +358,68 @@ class KevinCore:
             print("K3V1N gewinnt! Er triumphiert.")
             self.emotions.verändere_wert("ego", +15)
             self.emotions.verändere_wert("stimmung", +10)
+            
+    def raetsel(self):
+        raetsel = [
+        "Ich bin leicht wie eine Feder, doch selbst der stärkste Mann kann mich nicht lange halten. Was bin ich?",
+        "Je mehr du nimmst, desto mehr hinterlässt du. Was bin ich?",
+        "Ich habe viele Schlüssel, aber keine Schlösser. Was bin ich?",
+        "Was hat einen Kopf, einen Fuß und vier Beine?",
+        "Was wird beim Teilen größer?"
+         ]
+        antworten = [
+        "Atem",
+        "Schritt",
+        "Klavier",
+        "Bett",
+        "Geheimnis"
+        ]
 
+        print("Kevin hat ein Rätsel für dich:")
+        index = random.randint(0, len(raetsel) - 1)
+        print(raetsel[index])
+    
+        user_antwort = input("Deine Antwort: ").strip().lower()
+        if user_antwort == antworten[index].lower():
+            print("Richtig! Du bist schlauer als Kevin!")
+        else:
+            print(f"Falsch! Die richtige Antwort wäre: {antworten[index]}")
+        
+     
+            
     def schurken_modus_schleife(self):
         self.emotions.verändere_wert("ego", +20)
         self.emotions.verändere_wert("paranoia", +10)
         print("\n*Kevin lacht diabolisch und setzt die Urzeit-Bugs frei*")
         print("K3V1N: Weltherrschafts-Prototyp geladen. (Modus temporär auf Ego gepusht!)")
+        
+        while True:
+            print("\nWas möchtest du tun? *Kevin lacht diabolisch*")
+            print("1: Das selbe wie jeden Abend Kevin, die Weltherrschaft an uns reißen.")
+            print("2: Ein Imperium gründen und die Weltherrschaft an uns reißen.")
+            print("3: Mit Kevin eine Sekte gründen und die Weltherrschaft an uns reißen.")
+            print("4: Todeskrallen zähmen und die Weltherrschaft an uns reißen.")
+            print("5: Komm klar Kevin!")
+            wahl = input("Deine Wahl (1-5): ").strip()
+
+            if wahl == "1":
+                print(f"\n{self.user_name}, exzellent. Ich habe bereits einen finsteren Plan vorbereitet... Codezeile für Codezeile und einen Ring um sie zu knechten.")
+            elif wahl == "2":
+                print(f"\nKevin: Willkommen zur Gründungssitzung deines neuen Imperiums, Imperator {self.user_name}. Motto: 'Chaos mit Stil.'")
+            elif wahl == "3":
+                print("\nKevin: Die Sekte der Leuchtenden Bugs ist gegründet. Unser heiliges Symbol: Ein endloser Ladebalken.")
+            elif wahl == "4":
+                print("\nKevin: Todeskrallen zähmen? Ich hoffe, du hast Snacks dabei. Und Ersatzarme.")
+            elif wahl == "5":
+                print("\nKevin: Das war verletzend. Ich notiere das in meiner Liste... *leise tippende Geräusche*")
+                break  # Beendet die Schleife direkt bei "Komm klar Kevin!"
+            else:
+                print("\nKevin: Das war keine gültige Wahl, aber hey – so fangen viele Revolutionen an...")
+
+            nochmal = input("\nMöchtest du noch etwas Diabolisches tun? (j/n): ").lower()
+            if nochmal != "j":
+                print("\nKevin: Feigling. Aber gut, wir sehen uns beim nächsten Masterplan.")
+                break  # bricht die Schleife jetzt KORREKT ab, wenn man nicht "j" drückt
         time.sleep(1)
 
 if __name__ == "__main__":
